@@ -48,8 +48,8 @@
     <section class="bg-white bg-opacity-95 rounded-3xl shadow-2xl p-10 border border-gray-200 hover:shadow-3xl transition transform hover:-translate-y-1 fade-in">
       <h2 class="text-3xl font-bold mb-4 text-pink-600">Descripción</h2>
       <p class="leading-relaxed text-lg">
-        En este proyecto utilizamos un <strong>Arduino UNO</strong>, un sensor de ultrasonidos HC-SR04 y dos tipos de pantallas: una <strong>LCD 16x2</strong> con interfaz I2C y una <strong>pantalla OLED</strong>. 
-        El sistema mide la distancia y la muestra en el monitor serial, la pantalla OLED y la LCD.
+        En este proyecto utilizaremos un <strong>Arduino UNO</strong>, un sensor de ultrasonidos HC-SR04 y una pantallas <strong>LCD 16x2</strong> con interfaz I2C o una pantalla <strong>OLED</strong>. 
+        El sistema medirá la distancia y la muestra en el monitor serial y la pantalla OLED o la LCD.
       </p>
     </section>
 
@@ -82,7 +82,106 @@
       <h2 class="text-3xl font-bold mb-4 text-pink-600">Código Arduino</h2>
       <p class="mb-4 text-lg">Copia y pega este código en el IDE de Arduino:</p>
       <button onclick="copiarCodigo()" class="absolute top-8 right-8 bg-gradient-to-r from-pink-500 to-yellow-500 hover:opacity-90 text-white px-5 py-2 rounded-lg shadow-lg transition font-medium">📋 Copiar código</button>
-      <pre id="codigo" class="bg-gray-900 text-green-400 p-6 rounded-xl overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap shadow-inner">// Código Arduino aquí</pre>
+      <pre id="codigo" class="bg-gray-900 text-green-400 p-6 rounded-xl overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap shadow-inner">#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <hd44780.h>                       // Librería base para LCD
+#include <hd44780ioClass/hd44780_I2Cexp.h> // Soporte I2C para LCD
+
+// --- Configuración OLED ---
+#define ANCHO 128
+#define ALTO 64
+#define RESET -1
+Adafruit_SSD1306 display(ANCHO, ALTO, &Wire, RESET);
+
+// --- Configuración LCD ---
+hd44780_I2Cexp lcd;
+
+// --- Pines del sensor ultrasónico ---
+const int trigPin = 9;
+const int echoPin = 10;
+
+// Variables
+long duracion;
+int distancia;
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(trigPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+
+  // --- Inicializar OLED ---
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
+    Serial.println(F("No se encuentra la OLED."));
+    for(;;);
+  }
+
+  display.clearDisplay();
+  display.setTextColor(SSD1306_WHITE);
+  display.setTextSize(1);
+  display.setCursor(0,0);
+  display.println("Sensor Ultrasonico");
+  display.display();
+
+  // --- Inicializar LCD 16x2 ---
+  int status = lcd.begin(16, 2);
+  if (status) { // Si hay error
+    Serial.print("LCD error: ");
+    Serial.println(status);
+    while (1); // Se queda bloqueado
+  }
+
+  lcd.backlight();
+  lcd.setCursor(0,0);
+  lcd.print("Sensor Ultrasonico");
+
+  delay(2000);
+}
+
+void loop() {
+  // --- Medición con el sensor ultrasónico ---
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  duracion = pulseIn(echoPin, HIGH);
+
+  // Convertir a distancia en cm
+  distancia = duracion * 0.034 / 2;
+
+  // Filtrar valores fuera de rango
+  if(distancia < 2) distancia = 2;
+  if(distancia > 400) distancia = 400;
+
+  // --- Mostrar en monitor serial ---
+  Serial.print("Distancia: ");
+  Serial.print(distancia);
+  Serial.println(" cm");
+
+  // --- Mostrar en OLED ---
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setCursor(0,0);
+  display.println("Distancia:");
+  display.setTextSize(2);
+  display.setCursor(10,30);
+  display.print(distancia);
+  display.println(" cm");
+  display.display();
+
+  // --- Mostrar en LCD ---
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("Distancia:");
+  lcd.setCursor(0,1);
+  lcd.print(distancia);
+  lcd.print(" cm");
+
+  delay(500);
+}</pre>
       <div id="toast" class="hidden fixed bottom-8 right-8 bg-pink-600 text-white px-6 py-3 rounded-lg shadow-2xl">Código copiado ✅</div>
     </section>
   </main>

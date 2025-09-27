@@ -25,8 +25,7 @@
     @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
     header, footer { z-index: 10; position: relative; }
     main { position: relative; z-index: 10; }
-    pre { background-color: rgba(0,0,0,0.85); padding:1rem; border-radius:0.75rem; overflow-x:auto; }
-    code { display:block; white-space: pre-wrap; color:#00ff00; }
+    pre, textarea { background-color: rgba(0,0,0,0.85); padding:1rem; border-radius:0.75rem; overflow-x:auto; color:#00ff00; font-family:monospace; }
     button { z-index:20; }
     #toast { display: none; position: fixed; bottom: 2rem; right: 2rem; background-color: #ff6b6b; color: white; padding: 1rem 2rem; border-radius: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold; z-index: 50; }
   </style>
@@ -44,7 +43,17 @@
     <!-- Descripción -->
     <section class="bg-white bg-opacity-95 rounded-3xl shadow-2xl p-10 border border-gray-200 hover:shadow-3xl transition transform hover:-translate-y-1 fade-in">
       <h2 class="text-3xl font-bold mb-4 text-pink-600">Descripción</h2>
-      <p class="leading-relaxed text-lg">Este proyecto utiliza un <strong>Arduino UNO</strong> con un <strong>sensor ultrasónico HC-SR04</strong> y muestra la distancia medida en una <strong>LCD 16x2 I2C</strong> y una <strong>pantalla OLED</strong>. Además, se visualiza en el monitor serial.</p>
+      <p class="leading-relaxed text-lg">Este proyecto utiliza un <strong>Arduino UNO</strong> con un <strong>sensor ultrasónico HC-SR04</strong> y muestra la distancia medida por el sensor en una <strong>LCD 16x2 I2C</strong> y una <strong>pantalla OLED</strong>. Además, se visualiza en el monitor serial.</p>
+    </section>
+
+    <!-- Montaje -->
+    <section class="bg-white bg-opacity-95 rounded-3xl shadow-2xl p-10 border border-gray-200 hover:shadow-3xl transition transform hover:-translate-y-1 fade-in">
+      <h2 class="text-3xl font-bold mb-4 text-pink-600">Montaje</h2>
+      <p class="leading-relaxed text-lg">Coloca la protoboard frente a ti y el Arduino Uno al lado, de manera que todos los cables puedan llegar cómodamente. La línea roja de la protoboard se utilizará como alimentación de 5V y la línea negra como GND. Conecta un cable rojo desde el 5V del Arduino a la línea roja y un cable negro desde el GND a la línea negra de la protoboard, de manera que todos los módulos puedan alimentarse desde allí.</p>
+      <br>
+      <p class="leading-relaxed text-lg">Inserta el sensor ultrasónico HC-SR04 en la protoboard. Conecta su pin VCC a la línea roja y su pin GND a la línea negra. Conecta el pin TRIG del sensor al pin digital 9 del Arduino y el pin ECHO al pin digital 10. Esto permitirá enviar la señal ultrasónica y recibir el eco para medir distancias de manera precisa.</p>
+      <br>
+      <p class="leading-relaxed text-lg">A continuación, coloca el LCD I2C en la protoboard o con cables jumper. Conecta su pin VCC a la línea roja y su pin GND a la línea negra. Los pines SDA y SCL del LCD se conectan a los pines A4 y A5 del Arduino, respectivamente, formando el bus I2C que permitirá enviar los datos de distancia al display.</p>
     </section>
 
     <!-- Materiales -->
@@ -63,12 +72,6 @@
     <!-- Esquema / Tinkercad -->
     <section class="bg-white bg-opacity-95 rounded-3xl shadow-2xl p-10 border border-gray-200 hover:shadow-3xl transition transform hover:-translate-y-1 fade-in">
       <h2 class="text-3xl font-bold mb-4 text-pink-600">Esquema de conexión</h2>
-      <p class="mb-4 text-lg">Conexiones recomendadas:</p>
-      <ul class="list-disc list-inside mb-6 space-y-2 text-lg">
-        <li>HC-SR04: VCC → 5V, GND → GND, Trig → Pin 9, Echo → Pin 10</li>
-        <li>Pantalla LCD I2C: VCC → 5V, GND → GND, SDA → A4, SCL → A5</li>
-        <li>Pantalla OLED I2C: VCC → 5V, GND → GND, SDA → A4, SCL → A5</li>
-      </ul>
       <div class="overflow-hidden rounded-2xl shadow-lg transform hover:scale-[1.02] transition">
         <iframe src="https://www.tinkercad.com/embed/evQV7cH6FR8?editbtn=1" class="w-full h-96 border-0 rounded-xl"></iframe>
       </div>
@@ -79,139 +82,72 @@
       <h2 class="text-3xl font-bold mb-4 text-pink-600">Código Arduino</h2>
       <p class="mb-4 text-lg">Copia y pega este código en el IDE de Arduino:</p>
       <button id="copiar-btn" class="absolute top-8 right-8 bg-gradient-to-r from-pink-500 to-yellow-500 hover:opacity-90 text-white px-5 py-2 rounded-lg shadow-lg transition font-medium">📋 Copiar código</button>
-      <pre id="codigo" style="outline:none;"><code>
-#include &lt;Wire.h&gt;
-#include &lt;Adafruit_GFX.h&gt;
-#include &lt;Adafruit_SSD1306.h&gt;
-#include &lt;hd44780.h&gt;
-#include &lt;hd44780ioClass/hd44780_I2Cexp.h&gt;
+      <textarea id="codigo" readonly style="width:100%; height:400px; padding:1rem; border-radius:0.75rem; background:rgba(0,0,0,0.85); color:#00ff00; font-family:monospace; font-size:0.9rem; overflow:auto;">#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+#include <hd44780.h>
+#include <hd44780ioClass/hd44780_I2Cexp.h>
 
-// --- Configuración OLED ---
 #define ANCHO 128
 #define ALTO 64
 #define RESET -1
 Adafruit_SSD1306 display(ANCHO, ALTO, &Wire, RESET);
 
-// --- Configuración LCD ---
 hd44780_I2Cexp lcd;
 
-// --- Pines del sensor ultrasónico ---
 const int trigPin = 9;
 const int echoPin = 10;
 
-// Variables
 long duracion;
 int distancia;
 
 void setup() {
   Serial.begin(9600);
-
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
-
-  // --- Inicializar OLED ---
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
-    Serial.println(F("No se encuentra la OLED."));
-    for(;;);
-  }
-
-  display.clearDisplay();
-  display.setTextColor(SSD1306_WHITE);
-  display.setTextSize(1);
-  display.setCursor(0,0);
-  display.println("Sensor Ultrasonico");
-  display.display();
-
-  // --- Inicializar LCD 16x2 ---
-  int status = lcd.begin(16, 2);
-  if (status) { // Si hay error
-    Serial.print("LCD error: ");
-    Serial.println(status);
-    while (1); // Se queda bloqueado
-  }
-
-  lcd.backlight();
-  lcd.setCursor(0,0);
-  lcd.print("Sensor Ultrasonico");
-
-  delay(2000);
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { Serial.println(F("No se encuentra la OLED.")); for(;;); }
+  display.clearDisplay(); display.setTextColor(SSD1306_WHITE); display.setTextSize(1); display.setCursor(0,0); display.println("Sensor Ultrasonico"); display.display();
+  int status = lcd.begin(16, 2); if (status) { Serial.print("LCD error: "); Serial.println(status); while (1); }
+  lcd.backlight(); lcd.setCursor(0,0); lcd.print("Sensor Ultrasonico"); delay(2000);
 }
 
 void loop() {
-  // --- Medición con el sensor ultrasónico ---
+  digitalWrite(trigPin, LOW); delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH); delayMicroseconds(10);
   digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-
   duracion = pulseIn(echoPin, HIGH);
-
-  // Convertir a distancia en cm
   distancia = duracion * 0.034 / 2;
-
-  // Filtrar valores fuera de rango
   if(distancia < 2) distancia = 2;
   if(distancia > 400) distancia = 400;
-
-  // --- Mostrar en monitor serial ---
-  Serial.print("Distancia: ");
-  Serial.print(distancia);
-  Serial.println(" cm");
-
-  // --- Mostrar en OLED ---
-  display.clearDisplay();
-  display.setTextSize(1);
-  display.setCursor(0,0);
-  display.println("Distancia:");
-  display.setTextSize(2);
-  display.setCursor(10,30);
-  display.print(distancia);
-  display.println(" cm");
-  display.display();
-
-  // --- Mostrar en LCD ---
-  lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print("Distancia:");
-  lcd.setCursor(0,1);
-  lcd.print(distancia);
-  lcd.print(" cm");
-
+  Serial.print("Distancia: "); Serial.print(distancia); Serial.println(" cm");
+  display.clearDisplay(); display.setTextSize(1); display.setCursor(0,0); display.println("Distancia:"); display.setTextSize(2); display.setCursor(10,30); display.print(distancia); display.println(" cm"); display.display();
+  lcd.clear(); lcd.setCursor(0,0); lcd.print("Distancia:"); lcd.setCursor(0,1); lcd.print(distancia); lcd.print(" cm");
   delay(500);
-}
-        </code></pre><div id="toast">Código copiado ✅</div>
+}</textarea>
+      <div id="toast">Código copiado ✅</div>
     </section>
 
   </main>
 
   <script>
-    async function copiarCodigo() {
-      const codigo = document.getElementById('codigo').innerText;
-      const toast = document.getElementById('toast');
+    document.getElementById('copiar-btn').addEventListener('click', function() {
+      const codigoTextarea = document.getElementById('codigo');
+      codigoTextarea.select();
+      codigoTextarea.setSelectionRange(0, 99999);
       try {
-        await navigator.clipboard.writeText(codigo);
+        document.execCommand('copy');
+        const toast = document.getElementById('toast');
         toast.style.display = 'block';
         setTimeout(() => { toast.style.display = 'none'; }, 1500);
-      } catch (err) {
-        // Fallback para entornos inseguros
-        const textArea = document.createElement('textarea');
-        textArea.value = codigo;
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        try { document.execCommand('copy'); toast.style.display = 'block'; setTimeout(() => { toast.style.display = 'none'; }, 1500); }
-        catch { alert('No se pudo copiar el código, selecciona y copia manualmente.'); }
-        document.body.removeChild(textArea);
+      } catch(err) {
+        alert('No se pudo copiar el código, selecciona y copia manualmente.');
       }
-    }
-
-    document.getElementById('copiar-btn').addEventListener('click', copiarCodigo);
+    });
 
     document.addEventListener('DOMContentLoaded', () => {
       if(window.tsParticles){
         tsParticles.load('tsparticles',{background:{color:{value:'transparent'}},fpsLimit:60,particles:{number:{value:200,density:{enable:true,area:1200}},color:{value:['#ff6b6b','#feca57','#ff9ff3','#48dbfb','#1dd1a1']},shape:{type:'circle'},opacity:{value:0.8,random:true},size:{value:{min:2,max:8},random:true},move:{enable:true,speed:3.5,direction:'none',random:true,straight:false,outModes:{default:'out'}}},interactivity:{events:{onHover:{enable:true,mode:'repulse'},onClick:{enable:true,mode:'push'}},modes:{repulse:{distance:180,duration:0.5},push:{quantity:10}}},detectRetina:true});
-      } else { console.error('tsParticles no se ha cargado correctamente.'); }
+      }
     });
   </script>
 </body>

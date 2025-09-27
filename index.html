@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Práctica Arduino - Sensor Ultrasonido con LCD y OLED</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Carga correcta y estable de tsParticles desde CDN -->
   <script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
   <style>
     body {
@@ -22,21 +21,17 @@
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
-    .fade-in {
-      opacity: 0;
-      transform: translateY(20px);
-      animation: fadeInUp 1s forwards;
-    }
-    @keyframes fadeInUp {
-      to { opacity: 1; transform: translateY(0); }
-    }
+    .fade-in { opacity: 0; transform: translateY(20px); animation: fadeInUp 1s forwards; }
+    @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
     header, footer { z-index: 10; position: relative; }
     main { position: relative; z-index: 10; }
-    pre { background-color: rgba(0,0,0,0.85); }
+    pre { background-color: rgba(0,0,0,0.85); padding:1rem; border-radius:0.75rem; overflow-x:auto; }
+    code { display:block; white-space: pre-wrap; color:#00ff00; }
+    button { z-index:20; }
+    #toast { display: none; position: fixed; bottom: 2rem; right: 2rem; background-color: #ff6b6b; color: white; padding: 1rem 2rem; border-radius: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-weight: bold; z-index: 50; }
   </style>
 </head>
 <body>
-  <!-- Partículas animadas -->
   <div id="tsparticles" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:0;"></div>
 
   <header class="bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 text-white p-10 text-center shadow-xl rounded-b-3xl fade-in">
@@ -44,49 +39,52 @@
     <p class="text-2xl mt-3 opacity-95">Sensor Ultrasonido con Pantalla LCD y OLED</p>
   </header>
 
-  <main class="max-w-6xl mx-auto p-6 space-y-12">
+  <main class="max-w-6xl mx-auto p-6 space-y-12 relative">
+
+    <!-- Descripción -->
     <section class="bg-white bg-opacity-95 rounded-3xl shadow-2xl p-10 border border-gray-200 hover:shadow-3xl transition transform hover:-translate-y-1 fade-in">
       <h2 class="text-3xl font-bold mb-4 text-pink-600">Descripción</h2>
-      <p class="leading-relaxed text-lg">
-        En este proyecto utilizaremos un <strong>Arduino UNO</strong>, un sensor de ultrasonidos HC-SR04 y una pantallas <strong>LCD 16x2</strong> con interfaz I2C o una pantalla <strong>OLED</strong>. 
-        El sistema medirá la distancia del sensor a un objeto en frente y la muestra en el monitor serial y la pantalla OLED o la LCD.
-      </p>
+      <p class="leading-relaxed text-lg">Este proyecto utiliza un <strong>Arduino UNO</strong> con un <strong>sensor ultrasónico HC-SR04</strong> y muestra la distancia medida en una <strong>LCD 16x2 I2C</strong> y una <strong>pantalla OLED</strong>. Además, se visualiza en el monitor serial.</p>
     </section>
 
+    <!-- Materiales -->
     <section class="bg-white bg-opacity-95 rounded-3xl shadow-2xl p-10 border border-gray-200 hover:shadow-3xl transition transform hover:-translate-y-1 fade-in">
       <h2 class="text-3xl font-bold mb-4 text-pink-600">Materiales</h2>
       <ul class="grid sm:grid-cols-2 gap-y-2 list-disc list-inside text-lg">
         <li>Arduino UNO</li>
         <li>Protoboard</li>
         <li>Pantalla LCD 16x2 con I2C</li>
-        <li>Pantalla OLED (I2C, 128x64)</li>
+        <li>Pantalla OLED 128x64</li>
         <li>Sensor de ultrasonidos HC-SR04</li>
         <li>Cables Dupont</li>
       </ul>
     </section>
 
+    <!-- Esquema / Tinkercad -->
     <section class="bg-white bg-opacity-95 rounded-3xl shadow-2xl p-10 border border-gray-200 hover:shadow-3xl transition transform hover:-translate-y-1 fade-in">
-      <h2 class="text-3xl font-bold mb-4 text-pink-600">Esquema de Conexión</h2>
-      <p class="mb-4 text-lg">Las conexiones se realizan de la siguiente forma:</p>
+      <h2 class="text-3xl font-bold mb-4 text-pink-600">Esquema de conexión</h2>
+      <p class="mb-4 text-lg">Conexiones recomendadas:</p>
       <ul class="list-disc list-inside mb-6 space-y-2 text-lg">
-        <li><strong>HC-SR04:</strong> VCC → 5V, GND → GND, Trig → Pin 9, Echo → Pin 10</li>
-        <li><strong>Pantalla LCD I2C:</strong> VCC → 5V, GND → GND, SDA → A4, SCL → A5</li>
-        <li><strong>Pantalla OLED I2C:</strong> VCC → 5V, GND → GND, SDA → A4, SCL → A5</li>
+        <li>HC-SR04: VCC → 5V, GND → GND, Trig → Pin 9, Echo → Pin 10</li>
+        <li>Pantalla LCD I2C: VCC → 5V, GND → GND, SDA → A4, SCL → A5</li>
+        <li>Pantalla OLED I2C: VCC → 5V, GND → GND, SDA → A4, SCL → A5</li>
       </ul>
       <div class="overflow-hidden rounded-2xl shadow-lg transform hover:scale-[1.02] transition">
         <iframe src="https://www.tinkercad.com/embed/evQV7cH6FR8?editbtn=1" class="w-full h-96 border-0 rounded-xl"></iframe>
       </div>
     </section>
 
+    <!-- Código Arduino -->
     <section class="bg-white bg-opacity-95 rounded-3xl shadow-2xl p-10 border border-gray-200 hover:shadow-3xl transition relative transform hover:-translate-y-1 fade-in">
       <h2 class="text-3xl font-bold mb-4 text-pink-600">Código Arduino</h2>
       <p class="mb-4 text-lg">Copia y pega este código en el IDE de Arduino:</p>
-      <button onclick="copiarCodigo()" class="absolute top-8 right-8 bg-gradient-to-r from-pink-500 to-yellow-500 hover:opacity-90 text-white px-5 py-2 rounded-lg shadow-lg transition font-medium">📋 Copiar código</button>
-      <pre id="codigo" class="bg-gray-900 text-green-400 p-6 rounded-xl overflow-x-auto text-sm leading-relaxed whitespace-pre-wrap shadow-inner">#include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
-#include <hd44780.h>                       // Librería base para LCD
-#include <hd44780ioClass/hd44780_I2Cexp.h> // Soporte I2C para LCD
+      <button id="copiar-btn" class="absolute top-8 right-8 bg-gradient-to-r from-pink-500 to-yellow-500 hover:opacity-90 text-white px-5 py-2 rounded-lg shadow-lg transition font-medium">📋 Copiar código</button>
+      <pre id="codigo" style="outline:none;"><code>
+#include &lt;Wire.h&gt;
+#include &lt;Adafruit_GFX.h&gt;
+#include &lt;Adafruit_SSD1306.h&gt;
+#include &lt;hd44780.h&gt;
+#include &lt;hd44780ioClass/hd44780_I2Cexp.h&gt;
 
 // --- Configuración OLED ---
 #define ANCHO 128
@@ -181,48 +179,40 @@ void loop() {
   lcd.print(" cm");
 
   delay(500);
-}</pre>
-      <div id="toast" class="hidden fixed bottom-8 right-8 bg-pink-600 text-white px-6 py-3 rounded-lg shadow-2xl">Código copiado ✅</div>
+}
+        </code></pre><div id="toast">Código copiado ✅</div>
     </section>
+
   </main>
 
-  <footer class="bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 text-white text-center p-6 mt-10 rounded-t-3xl shadow-inner fade-in">
-    <p class="text-lg">Práctica Arduino - Sensor Ultrasonido © 2025</p>
-  </footer>
-
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      if (window.tsParticles) {
-        tsParticles.load("tsparticles", {
-          background: { color: { value: "transparent" } },
-          fpsLimit: 60,
-          particles: {
-            number: { value: 150, density: { enable: true, area: 1000 } },
-            color: { value: ["#ff6b6b", "#feca57", "#ff9ff3", "#48dbfb"] },
-            shape: { type: "circle" },
-            opacity: { value: 0.7, random: true },
-            size: { value: { min: 2, max: 6 }, random: true },
-            move: { enable: true, speed: 3, direction: "none", random: true, straight: false, outModes: { default: "out" } }
-          },
-          interactivity: {
-            events: { onHover: { enable: true, mode: "repulse" }, onClick: { enable: true, mode: "push" } },
-            modes: { repulse: { distance: 150, duration: 0.4 }, push: { quantity: 8 } }
-          },
-          detectRetina: true
-        });
-      } else {
-        console.error('tsParticles no se ha cargado correctamente.');
+    async function copiarCodigo() {
+      const codigo = document.getElementById('codigo').innerText;
+      const toast = document.getElementById('toast');
+      try {
+        await navigator.clipboard.writeText(codigo);
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 1500);
+      } catch (err) {
+        // Fallback para entornos inseguros
+        const textArea = document.createElement('textarea');
+        textArea.value = codigo;
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try { document.execCommand('copy'); toast.style.display = 'block'; setTimeout(() => { toast.style.display = 'none'; }, 1500); }
+        catch { alert('No se pudo copiar el código, selecciona y copia manualmente.'); }
+        document.body.removeChild(textArea);
       }
-    });
-
-    function copiarCodigo() {
-      const codigo = document.getElementById("codigo").innerText;
-      navigator.clipboard.writeText(codigo).then(() => {
-        const toast = document.getElementById("toast");
-        toast.classList.remove("hidden");
-        setTimeout(() => toast.classList.add("hidden"), 2000);
-      });
     }
+
+    document.getElementById('copiar-btn').addEventListener('click', copiarCodigo);
+
+    document.addEventListener('DOMContentLoaded', () => {
+      if(window.tsParticles){
+        tsParticles.load('tsparticles',{background:{color:{value:'transparent'}},fpsLimit:60,particles:{number:{value:200,density:{enable:true,area:1200}},color:{value:['#ff6b6b','#feca57','#ff9ff3','#48dbfb','#1dd1a1']},shape:{type:'circle'},opacity:{value:0.8,random:true},size:{value:{min:2,max:8},random:true},move:{enable:true,speed:3.5,direction:'none',random:true,straight:false,outModes:{default:'out'}}},interactivity:{events:{onHover:{enable:true,mode:'repulse'},onClick:{enable:true,mode:'push'}},modes:{repulse:{distance:180,duration:0.5},push:{quantity:10}}},detectRetina:true});
+      } else { console.error('tsParticles no se ha cargado correctamente.'); }
+    });
   </script>
 </body>
 </html>
